@@ -479,20 +479,14 @@ class Giwa:
             except ValueError:
                 print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字 (1, 2, 或 3)。{Style.RESET_ALL}")
 
-        while True:
-            try:
-                print(f"{Fore.WHITE + Style.BRIGHT}1. 使用代理运行{Style.RESET_ALL}")
-                print(f"{Fore.WHITE + Style.BRIGHT}2. 不使用代理运行{Style.RESET_ALL}")
-                proxy_choice = int(input(f"{Fore.BLUE + Style.BRIGHT}请选择 [1/2] -> {Style.RESET_ALL}").strip())
-
-                if proxy_choice in [1, 2]:
-                    proxy_type = "使用" if proxy_choice == 1 else "不使用"
-                    print(f"{Fore.GREEN + Style.BRIGHT}已选择{proxy_type}代理运行。{Style.RESET_ALL}")
-                    break
-                else:
-                    print(f"{Fore.RED + Style.BRIGHT}请输入 1 或 2。{Style.RESET_ALL}")
-            except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字 (1 或 2)。{Style.RESET_ALL}")
+        # 自动检测代理设置
+        proxy_available = os.path.exists("proxy.txt") and os.path.getsize("proxy.txt") > 0
+        if proxy_available:
+            print(f"{Fore.GREEN + Style.BRIGHT}检测到代理文件，将使用代理运行{Style.RESET_ALL}")
+            proxy_choice = 1
+        else:
+            print(f"{Fore.YELLOW + Style.BRIGHT}未检测到代理文件，将直接连接{Style.RESET_ALL}")
+            proxy_choice = 2
 
         rotate_proxy = False
         if proxy_choice == 1:
