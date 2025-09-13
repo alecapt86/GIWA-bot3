@@ -30,31 +30,6 @@ class RunManager:
 ╚══════════════════════════════════════════════════════════════╝{Style.RESET_ALL}
         """)
     
-    def check_dependencies(self):
-        """检查依赖包是否安装"""
-        print(f"{Fore.CYAN + Style.BRIGHT}🔍 检查依赖包...{Style.RESET_ALL}")
-        
-        required_packages = [
-            "web3", "aiohttp", "aiohttp_socks", "pysocks", 
-            "fake_useragent", "eth_account", "colorama", "pytz", "cryptography"
-        ]
-        
-        missing_packages = []
-        for package in required_packages:
-            try:
-                __import__(package)
-            except ImportError:
-                missing_packages.append(package)
-        
-        if missing_packages:
-            print(f"{Fore.RED + Style.BRIGHT}❌ 缺少依赖包: {', '.join(missing_packages)}{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW + Style.BRIGHT}请运行: pip install -r requirements.txt{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW + Style.BRIGHT}或运行: python install_dependencies.py{Style.RESET_ALL}")
-            return False
-        
-        print(f"{Fore.GREEN + Style.BRIGHT}✅ 所有依赖包检查完成{Style.RESET_ALL}")
-        return True
-
     def check_files(self):
         """检查必要文件是否存在"""
         print(f"{Fore.CYAN + Style.BRIGHT}🔍 检查文件状态...{Style.RESET_ALL}")
@@ -180,11 +155,6 @@ class RunManager:
     def main(self):
         """主函数"""
         self.print_banner()
-        
-        # 检查依赖包
-        if not self.check_dependencies():
-            input(f"\n{Fore.RED + Style.BRIGHT}按回车键退出...{Style.RESET_ALL}")
-            return
         
         # 检查文件
         if not self.check_files():
