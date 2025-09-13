@@ -68,6 +68,25 @@ python run.py
 python bot.py
 ```
 
+#### 方法3: 后台持续运行（推荐用于服务器）
+```bash
+# 安装 screen（如果未安装）
+# Ubuntu/Debian: sudo apt install screen
+# CentOS/RHEL: sudo yum install screen
+# macOS: brew install screen
+
+# 创建新的 screen 会话
+screen -S giwa-bot
+
+# 在 screen 会话中运行机器人
+python3 run.py
+
+# 按 Ctrl+A 然后按 D 来分离会话（保持后台运行）
+# 重新连接会话: screen -r giwa-bot
+# 查看所有会话: screen -ls
+# 终止会话: screen -S giwa-bot -X quit
+```
+
 ## 🔐 私钥加密使用流程
 
 ### 首次使用 - 加密私钥
@@ -151,18 +170,6 @@ python run.py
 [ 09/13/25 16:15:31 WIB ] |     交易哈希 : 0xabcd...efgh
 ```
 
-## 🔧 高级配置
-
-### 代理推荐
-如果您需要可靠的代理服务，推荐使用 **Nstproxy**：
-- 价格实惠（从 $0.1/GB）
-- 全球覆盖
-- 轮换控制
-- 反封禁技术
-
-🔗 [Nstproxy.com](https://www.nstproxy.com/?utm_source=vonssy) | [Telegram](https://t.me/nstproxy) | [Discord](https://discord.gg/5jjWCAmvng) | [Github](https://github.com/Nstproxy)  
-👉 使用代码 **VONSSY** 获得 **10% 折扣**
-
 ### 依赖包管理
 如果遇到依赖问题，可以手动检查：
 ```bash
@@ -174,6 +181,43 @@ pip uninstall web3 eth-account
 pip install web3==7.11.1 eth-account==0.13.7
 ```
 
+### 后台运行管理
+对于需要长时间运行的服务器环境，推荐使用 screen：
+
+#### Screen 基本命令
+```bash
+# 创建新会话
+screen -S giwa-bot
+
+# 列出所有会话
+screen -ls
+
+# 重新连接到会话
+screen -r giwa-bot
+
+# 分离会话（保持运行）
+# 在会话内按: Ctrl+A 然后按 D
+
+# 终止会话
+screen -S giwa-bot -X quit
+
+# 强制终止所有 screen 会话
+screen -wipe
+```
+
+#### 自动化脚本示例
+创建 `start_bot.sh` 脚本：
+```bash
+#!/bin/bash
+# 检查是否已有 giwa-bot 会话
+if screen -list | grep -q "giwa-bot"; then
+    echo "giwa-bot 会话已存在，正在重新连接..."
+    screen -r giwa-bot
+else
+    echo "创建新的 giwa-bot 会话..."
+    screen -S giwa-bot python3 run.py
+fi
+```
 ## 🛠️ 故障排除
 
 ### 常见问题
