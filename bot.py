@@ -142,6 +142,14 @@ class Giwa:
             """
         )
 
+    def get_concurrency(self):
+        """从环境变量读取并发数，默认 1"""
+        try:
+            value = int(os.environ.get("GIWA_CONCURRENCY", "1").strip())
+            return value if value >= 1 else 1
+        except Exception:
+            return 1
+
     def format_seconds(self, seconds):
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -728,28 +736,41 @@ class Giwa:
                     f"{Fore.WHITE + Style.BRIGHT}{len(accounts)}{Style.RESET_ALL}"
                 )
 
+                concurrency = self.get_concurrency()
+                self.log(
+                    f"{Fore.GREEN + Style.BRIGHT}并发数: {Style.RESET_ALL}"
+                    f"{Fore.WHITE + Style.BRIGHT}{concurrency}{Style.RESET_ALL}"
+                )
+
                 if use_proxy:
                     await self.load_proxies()
                 
+                semaphore = asyncio.Semaphore(concurrency)
+
                 separator = "=" * 25
-                for account in accounts:
-                    if account:
-                        address = self.generate_address(account)
+
+                async def run_for_account(acc: str):
+                    if not acc:
+                        return
+                    async with semaphore:
+                        address_local = self.generate_address(acc)
                         self.log(
                             f"{Fore.CYAN + Style.BRIGHT}{separator}[{Style.RESET_ALL}"
-                            f"{Fore.WHITE + Style.BRIGHT} {self.mask_account(address)} {Style.RESET_ALL}"
+                            f"{Fore.WHITE + Style.BRIGHT} {self.mask_account(address_local)} {Style.RESET_ALL}"
                             f"{Fore.CYAN + Style.BRIGHT}]{separator}{Style.RESET_ALL}"
                         )
-
-                        if not address:
+                        if not address_local:
                             self.log(
                                 f"{Fore.CYAN+Style.BRIGHT}状态    :{Style.RESET_ALL}"
                                 f"{Fore.RED+Style.BRIGHT} 私钥无效或库版本不支持 {Style.RESET_ALL}"
                             )
-                            continue
-                        
-                        await self.process_accounts(account, address, option, use_proxy, rotate_proxy)
+                            return
+                        await self.process_accounts(acc, address_local, option, use_proxy, rotate_proxy)
                         await asyncio.sleep(3)
+
+                tasks = [asyncio.create_task(run_for_account(acc)) for acc in accounts]
+                if tasks:
+                    await asyncio.gather(*tasks)
 
                 self.log(f"{Fore.CYAN + Style.BRIGHT}={Style.RESET_ALL}"*72)
                 seconds = 24 * 60 * 60
