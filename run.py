@@ -20,7 +20,6 @@ class RunManager:
         self.bot_script = "bot.py"
         self.encrypted_file = "accounts_encrypted.txt"
         self.accounts_file = "accounts.txt"
-        self.env_concurrency_key = "GIWA_CONCURRENCY"
     
     def print_banner(self):
         """打印欢迎横幅"""
@@ -112,25 +111,6 @@ class RunManager:
             print(f"{Fore.RED + Style.BRIGHT}❌ 机器人运行出错: {e}{Style.RESET_ALL}")
             return False
 
-    def ask_concurrency(self):
-        """询问并发账户数量"""
-        print(f"\n{Fore.CYAN + Style.BRIGHT}⚙️ 设置并发: 同时处理的账户数量{Style.RESET_ALL}")
-        print(f"{Fore.WHITE + Style.BRIGHT}提示: 过大并发可能导致 RPC/代理失败{Style.RESET_ALL}")
-        default_value = os.environ.get(self.env_concurrency_key, "1")
-        while True:
-            try:
-                value = input(f"{Fore.BLUE + Style.BRIGHT}请输入并发数 (默认 {default_value}): {Style.RESET_ALL}").strip()
-                if value == "":
-                    value = default_value
-                concurrency = int(value)
-                if concurrency >= 1:
-                    os.environ[self.env_concurrency_key] = str(concurrency)
-                    print(f"{Fore.GREEN + Style.BRIGHT}✅ 并发数已设置为 {concurrency}{Style.RESET_ALL}")
-                    return concurrency
-                else:
-                    print(f"{Fore.RED + Style.BRIGHT}并发数必须 >= 1{Style.RESET_ALL}")
-            except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}请输入有效的数字{Style.RESET_ALL}")
     
     def show_menu(self):
         """显示菜单选项"""
@@ -170,9 +150,6 @@ class RunManager:
             print(f"{Fore.GREEN + Style.BRIGHT}等待 2 秒后启动机器人...{Style.RESET_ALL}")
             time.sleep(2)
         
-        # 设置并发
-        self.ask_concurrency()
-
         # 运行机器人
         return self.run_bot()
     
@@ -196,7 +173,6 @@ class RunManager:
             self.run_encryption()
         elif choice == 3:
             # 仅运行机器人
-            self.ask_concurrency()
             self.run_bot()
         elif choice == 4:
             # 退出
