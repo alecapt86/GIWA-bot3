@@ -65,7 +65,7 @@ class Giwa:
         self.max_delay = 0
 
     def generate_key_from_password(self, password: str, salt: bytes) -> bytes:
-        """从密码生成加密密钥"""
+        """Derive an encryption key from the supplied password."""
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -76,51 +76,51 @@ class Giwa:
         return key
 
     def decrypt_accounts(self, password: str):
-        """解密 accounts_encrypted.txt 文件"""
+        """Decrypt the accounts_encrypted.txt file."""
         try:
             if not os.path.exists(self.encrypted_file):
-                self.log(f"{Fore.RED + Style.BRIGHT}错误: 加密文件 {self.encrypted_file} 不存在!{Style.RESET_ALL}")
+                self.log(f"{Fore.RED + Style.BRIGHT}Error: encrypted file {self.encrypted_file} not found!{Style.RESET_ALL}")
                 return None
-            
+
             with open(self.encrypted_file, "rb") as f:
-                # 读取盐
+                # Read the salt
                 salt = f.read(16)
-                
-                # 读取私钥数量
+
+                # Read the number of stored private keys
                 count_bytes = f.read(4)
                 count = int.from_bytes(count_bytes, 'big')
-                
-                # 从密码生成密钥
+
+                # Derive the key from the password
                 key = self.generate_key_from_password(password, salt)
                 fernet = Fernet(key)
-                
-                # 解密所有私钥
+
+                # Decrypt each private key
                 accounts = []
                 for _ in range(count):
-                    # 读取加密私钥长度
+                    # Read the encrypted key length
                     length_bytes = f.read(4)
                     length = int.from_bytes(length_bytes, 'big')
-                    
-                    # 读取加密私钥
+
+                    # Read the encrypted private key
                     encrypted_account = f.read(length)
-                    
-                    # 解密私钥
+
+                    # Decrypt the private key
                     decrypted_account = fernet.decrypt(encrypted_account).decode()
                     accounts.append(decrypted_account)
-                
+
                 return accounts
-                
+
         except Exception as e:
-            self.log(f"{Fore.RED + Style.BRIGHT}解密失败: {e}{Style.RESET_ALL}")
+            self.log(f"{Fore.RED + Style.BRIGHT}Decryption failed: {e}{Style.RESET_ALL}")
             return None
 
     def get_password(self):
-        """获取用户输入的密码"""
+        """Prompt the user for the decryption password."""
         while True:
-            password = getpass.getpass(f"{Fore.YELLOW + Style.BRIGHT}请输入解密密码: {Style.RESET_ALL}")
+            password = getpass.getpass(f"{Fore.YELLOW + Style.BRIGHT}Enter decryption password: {Style.RESET_ALL}")
             if password:
                 return password
-            print(f"{Fore.RED + Style.BRIGHT}密码不能为空!{Style.RESET_ALL}")
+            print(f"{Fore.RED + Style.BRIGHT}Password cannot be empty!{Style.RESET_ALL}")
 
     def clear_terminal(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -135,10 +135,10 @@ class Giwa:
     def welcome(self):
         print(
             f"""
-        {Fore.GREEN + Style.BRIGHT}Giwa 测试网 {Fore.BLUE + Style.BRIGHT}自动机器人
+        {Fore.GREEN + Style.BRIGHT}Giwa Testnet {Fore.BLUE + Style.BRIGHT}Automation Bot
             """
             f"""
-        {Fore.GREEN + Style.BRIGHT}Giwa测试网--ferdie_jhovie{Style.RESET_ALL}
+        {Fore.GREEN + Style.BRIGHT}Giwa Testnet -- ferdie_jhovie{Style.RESET_ALL}
             """
         )
 
@@ -151,22 +151,22 @@ class Giwa:
         filename = "proxy.txt"
         try:
             if not os.path.exists(filename):
-                self.log(f"{Fore.RED + Style.BRIGHT}文件 {filename} 未找到。{Style.RESET_ALL}")
+                self.log(f"{Fore.RED + Style.BRIGHT}File {filename} not found.{Style.RESET_ALL}")
                 return
             with open(filename, 'r') as f:
                 self.proxies = [line.strip() for line in f.read().splitlines() if line.strip()]
-            
+
             if not self.proxies:
-                self.log(f"{Fore.RED + Style.BRIGHT}未找到代理。{Style.RESET_ALL}")
+                self.log(f"{Fore.RED + Style.BRIGHT}No proxies detected.{Style.RESET_ALL}")
                 return
 
             self.log(
-                f"{Fore.GREEN + Style.BRIGHT}代理总数  : {Style.RESET_ALL}"
+                f"{Fore.GREEN + Style.BRIGHT}Total proxies : {Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT}{len(self.proxies)}{Style.RESET_ALL}"
             )
-        
+
         except Exception as e:
-            self.log(f"{Fore.RED + Style.BRIGHT}加载代理失败: {e}{Style.RESET_ALL}")
+            self.log(f"{Fore.RED + Style.BRIGHT}Failed to load proxies: {e}{Style.RESET_ALL}")
             self.proxies = []
 
     def check_proxy_schemes(self, proxies):
@@ -211,12 +211,12 @@ class Giwa:
                 else:
                     return None, proxy, None
 
-            raise Exception("不支持此代理类型。")
+            raise Exception("Unsupported proxy type.")
         except Exception as e:
             if "Missing dependencies for SOCKS support" in str(e):
-                raise Exception("SOCKS代理需要安装pysocks包: pip install pysocks")
+                raise Exception("SOCKS proxies require the pysocks package: pip install pysocks")
             else:
-                raise Exception(f"代理配置错误: {str(e)}")
+                raise Exception(f"Proxy configuration error: {str(e)}")
     
     def generate_address(self, account: str):
         try:
@@ -250,12 +250,12 @@ class Giwa:
             except Exception as e:
                 if attempt < retries:
                     self.log(
-                        f"{Fore.YELLOW+Style.BRIGHT}     连接尝试 {attempt + 1}/{retries}: {str(e)}{Style.RESET_ALL}"
+                        f"{Fore.YELLOW+Style.BRIGHT}     Connection attempt {attempt + 1}/{retries}: {str(e)}{Style.RESET_ALL}"
                     )
                     await asyncio.sleep(3)
                     continue
                 self.log(
-                    f"{Fore.RED+Style.BRIGHT}     连接RPC失败: {str(e)}{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT}     Failed to connect to RPC: {str(e)}{Style.RESET_ALL}"
                 )
                 return None
         
@@ -265,8 +265,8 @@ class Giwa:
             
             if web3 is None:
                 self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}     消息 :{Style.RESET_ALL}"
-                    f"{Fore.RED+Style.BRIGHT} Web3连接失败 {Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT}     Message :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Web3 connection failed {Style.RESET_ALL}"
                 )
                 return None
 
@@ -276,7 +276,7 @@ class Giwa:
             return token_balance
         except Exception as e:
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     消息 :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Message :{Style.RESET_ALL}"
                 f"{Fore.RED+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
             )
             return None
@@ -293,7 +293,7 @@ class Giwa:
             except Exception as e:
                 pass
             await asyncio.sleep(2 ** attempt)
-        raise Exception("在最大重试次数后未找到交易哈希")
+        raise Exception("Transaction hash not found after maximum retries")
 
     async def wait_for_receipt_with_retries(self, web3, tx_hash, retries=5):
         for attempt in range(retries):
@@ -305,7 +305,7 @@ class Giwa:
             except Exception as e:
                 pass
             await asyncio.sleep(2 ** attempt)
-        raise Exception("在最大重试次数后未找到交易收据")
+        raise Exception("Transaction receipt not found after maximum retries")
     
     async def perform_deposit(self, account: str, address: str, network: dict, use_proxy: bool):
         try:
@@ -313,8 +313,8 @@ class Giwa:
             
             if web3 is None:
                 self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}     消息 :{Style.RESET_ALL}"
-                    f"{Fore.RED+Style.BRIGHT} Web3连接失败 {Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT}     Message :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Web3 connection failed {Style.RESET_ALL}"
                 )
                 return None, None
 
@@ -346,7 +346,7 @@ class Giwa:
 
         except Exception as e:
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     消息 :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Message :{Style.RESET_ALL}"
                 f"{Fore.RED+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
             )
             return None, None
@@ -357,8 +357,8 @@ class Giwa:
             
             if web3 is None:
                 self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}     消息 :{Style.RESET_ALL}"
-                    f"{Fore.RED+Style.BRIGHT} Web3连接失败 {Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT}     Message :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Web3 connection failed {Style.RESET_ALL}"
                 )
                 return None, None
 
@@ -390,7 +390,7 @@ class Giwa:
 
         except Exception as e:
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     消息 :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Message :{Style.RESET_ALL}"
                 f"{Fore.RED+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
             )
             return None, None
@@ -400,9 +400,9 @@ class Giwa:
             print(
                 f"{Fore.CYAN + Style.BRIGHT}[ {datetime.now().astimezone(wib).strftime('%x %X %Z')} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                f"{Fore.BLUE + Style.BRIGHT}等待{Style.RESET_ALL}"
+                f"{Fore.BLUE + Style.BRIGHT}Waiting{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} {remaining} {Style.RESET_ALL}"
-                f"{Fore.BLUE + Style.BRIGHT}秒后进行下一笔交易...{Style.RESET_ALL}",
+                f"{Fore.BLUE + Style.BRIGHT} seconds before the next transaction...{Style.RESET_ALL}",
                 end="\r",
                 flush=True
             )
@@ -411,93 +411,93 @@ class Giwa:
     def print_bridge_question(self):
         while True:
             try:
-                bridge_count = int(input(f"{Fore.YELLOW + Style.BRIGHT}桥接次数 -> {Style.RESET_ALL}").strip())
+                bridge_count = int(input(f"{Fore.YELLOW + Style.BRIGHT}Bridge count -> {Style.RESET_ALL}").strip())
                 if bridge_count > 0:
                     self.bridge_count = bridge_count
                     break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}请输入正数。{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Please enter a positive number.{Style.RESET_ALL}")
             except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字。{Style.RESET_ALL}")
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Please enter a number.{Style.RESET_ALL}")
 
         while True:
             try:
-                bridge_amount = float(input(f"{Fore.YELLOW + Style.BRIGHT}输入 ETH 数量 -> {Style.RESET_ALL}").strip())
+                bridge_amount = float(input(f"{Fore.YELLOW + Style.BRIGHT}ETH amount -> {Style.RESET_ALL}").strip())
                 if bridge_amount > 0:
                     self.bridge_amount = bridge_amount
                     break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}数量必须大于0。{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Amount must be greater than 0.{Style.RESET_ALL}")
             except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字。{Style.RESET_ALL}")
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Please enter a number.{Style.RESET_ALL}")
 
     def print_delay_question(self):
         while True:
             try:
-                min_delay = int(input(f"{Fore.YELLOW + Style.BRIGHT}每笔交易最小延迟 -> {Style.RESET_ALL}").strip())
+                min_delay = int(input(f"{Fore.YELLOW + Style.BRIGHT}Minimum delay per transaction -> {Style.RESET_ALL}").strip())
                 if min_delay >= 0:
                     self.min_delay = min_delay
                     break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}最小延迟必须 >= 0。{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Minimum delay must be >= 0.{Style.RESET_ALL}")
             except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字。{Style.RESET_ALL}")
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Please enter a number.{Style.RESET_ALL}")
 
         while True:
             try:
-                max_delay = int(input(f"{Fore.YELLOW + Style.BRIGHT}每笔交易最大延迟 -> {Style.RESET_ALL}").strip())
+                max_delay = int(input(f"{Fore.YELLOW + Style.BRIGHT}Maximum delay per transaction -> {Style.RESET_ALL}").strip())
                 if max_delay >= min_delay:
                     self.max_delay = max_delay
                     break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}最大延迟必须 >= 最小延迟。{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Maximum delay must be >= minimum delay.{Style.RESET_ALL}")
             except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字。{Style.RESET_ALL}")
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Please enter a number.{Style.RESET_ALL}")
 
     def print_question(self):
         while True:
             try:
-                print(f"{Fore.GREEN + Style.BRIGHT}选择选项:{Style.RESET_ALL}")
-                print(f"{Fore.WHITE + Style.BRIGHT}1. 从 Sepolia 桥接到 Giwa{Style.RESET_ALL}")
-                print(f"{Fore.WHITE + Style.BRIGHT}2. 从 Giwa 桥接到 Sepolia{Style.RESET_ALL}")
-                print(f"{Fore.WHITE + Style.BRIGHT}3. 随机桥接{Style.RESET_ALL}")
-                option = int(input(f"{Fore.BLUE + Style.BRIGHT}请选择 [1/2/3] -> {Style.RESET_ALL}").strip())
+                print(f"{Fore.GREEN + Style.BRIGHT}Choose a bridging option:{Style.RESET_ALL}")
+                print(f"{Fore.WHITE + Style.BRIGHT}1. Sepolia → Giwa{Style.RESET_ALL}")
+                print(f"{Fore.WHITE + Style.BRIGHT}2. Giwa → Sepolia{Style.RESET_ALL}")
+                print(f"{Fore.WHITE + Style.BRIGHT}3. Random direction{Style.RESET_ALL}")
+                option = int(input(f"{Fore.BLUE + Style.BRIGHT}Select [1/2/3] -> {Style.RESET_ALL}").strip())
 
                 if option in [1, 2, 3]:
                     option_type = (
-                        "从 Sepolia 桥接到 Giwa" if option == 1 else 
-                        "从 Giwa 桥接到 Sepolia" if option == 2 else 
-                        "随机桥接"
+                        "Sepolia → Giwa" if option == 1 else
+                        "Giwa → Sepolia" if option == 2 else
+                        "Random direction"
                     )
-                    print(f"{Fore.GREEN + Style.BRIGHT}已选择 {option_type}。{Style.RESET_ALL}")
+                    print(f"{Fore.GREEN + Style.BRIGHT}Selected {option_type}.{Style.RESET_ALL}")
 
                     self.print_bridge_question()
                     self.print_delay_question()
                     break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}请输入 1、2 或 3。{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Please enter 1, 2, or 3.{Style.RESET_ALL}")
             except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入数字 (1, 2, 或 3)。{Style.RESET_ALL}")
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number (1, 2, or 3).{Style.RESET_ALL}")
 
-        # 自动检测代理设置
+        # Automatically detect proxy configuration
         proxy_available = os.path.exists("proxy.txt") and os.path.getsize("proxy.txt") > 0
         if proxy_available:
-            print(f"{Fore.GREEN + Style.BRIGHT}检测到代理文件，将使用代理运行{Style.RESET_ALL}")
+            print(f"{Fore.GREEN + Style.BRIGHT}Proxy file detected. Proxies will be used.{Style.RESET_ALL}")
             proxy_choice = 1
         else:
-            print(f"{Fore.YELLOW + Style.BRIGHT}未检测到代理文件，将直接连接{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW + Style.BRIGHT}No proxy file detected. Using direct connection.{Style.RESET_ALL}")
             proxy_choice = 2
 
         rotate_proxy = False
         if proxy_choice == 1:
             while True:
-                rotate_proxy = input(f"{Fore.BLUE + Style.BRIGHT}轮换无效代理? [y/n] -> {Style.RESET_ALL}").strip()
+                rotate_proxy = input(f"{Fore.BLUE + Style.BRIGHT}Rotate invalid proxies? [y/n] -> {Style.RESET_ALL}").strip()
 
                 if rotate_proxy in ["y", "n"]:
                     rotate_proxy = rotate_proxy == "y"
                     break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}输入无效。请输入 'y' 或 'n'。{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Invalid input. Please enter 'y' or 'n'.{Style.RESET_ALL}")
 
         return option, proxy_choice, rotate_proxy
     
@@ -510,8 +510,8 @@ class Giwa:
                     return True
         except (Exception, ClientResponseError) as e:
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}状态    :{Style.RESET_ALL}"
-                f"{Fore.RED+Style.BRIGHT} 连接未返回 200 OK {Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}Status   :{Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} Connection did not return 200 OK {Style.RESET_ALL}"
                 f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
                 f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
             )
@@ -522,7 +522,7 @@ class Giwa:
         while True:
             proxy = self.get_next_proxy_for_account(address) if use_proxy else None
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}代理     :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}Proxy     :{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {proxy} {Style.RESET_ALL}"
             )
 
@@ -542,24 +542,24 @@ class Giwa:
         if tx_hash and block_number:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.GREEN+Style.BRIGHT} 成功 {Style.RESET_ALL}"
+                f"{Fore.GREEN+Style.BRIGHT} Success {Style.RESET_ALL}"
             )
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     区块   :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Block   :{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {block_number} {Style.RESET_ALL}"
             )
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     交易哈希 :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Tx Hash :{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {tx_hash} {Style.RESET_ALL}"
             )
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     浏览器:{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Explorer:{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {network['explorer']}{tx_hash} {Style.RESET_ALL}"
             )
         else:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.RED+Style.BRIGHT} 链上操作失败 {Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} On-chain operation failed {Style.RESET_ALL}"
             )
         
     async def process_perform_withdraw(self, account: str, address: str, network: dict, use_proxy: bool):
@@ -567,54 +567,54 @@ class Giwa:
         if tx_hash and block_number:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.GREEN+Style.BRIGHT} 成功 {Style.RESET_ALL}"
+                f"{Fore.GREEN+Style.BRIGHT} Success {Style.RESET_ALL}"
             )
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     区块   :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Block   :{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {block_number} {Style.RESET_ALL}"
             )
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     交易哈希 :{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Tx Hash :{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {tx_hash} {Style.RESET_ALL}"
             )
             self.log(
-                f"{Fore.CYAN+Style.BRIGHT}     浏览器:{Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}     Explorer:{Style.RESET_ALL}"
                 f"{Fore.WHITE+Style.BRIGHT} {network['explorer']}{tx_hash} {Style.RESET_ALL}"
             )
         else:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.RED+Style.BRIGHT} 链上操作失败 {Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} On-chain operation failed {Style.RESET_ALL}"
             )
         
     async def process_option_1(self, account: str, address: str, use_proxy: bool):
         self.log(
-            f"{Fore.CYAN+Style.BRIGHT}     配对    :{Style.RESET_ALL}"
-            f"{Fore.BLUE+Style.BRIGHT} 从 Sepolia 到 Giwa {Style.RESET_ALL}"
+            f"{Fore.CYAN+Style.BRIGHT}     Route    :{Style.RESET_ALL}"
+            f"{Fore.BLUE+Style.BRIGHT} Sepolia → Giwa {Style.RESET_ALL}"
         )
-        
+
         self.log(
-            f"{Fore.CYAN+Style.BRIGHT}     数量  :{Style.RESET_ALL}"
+            f"{Fore.CYAN+Style.BRIGHT}     Amount  :{Style.RESET_ALL}"
             f"{Fore.WHITE+Style.BRIGHT} {self.bridge_amount} ETH {Style.RESET_ALL}"
         )
 
         balance = await self.get_token_balance(address, self.L1_NETWORK, use_proxy)
         self.log(
-            f"{Fore.CYAN+Style.BRIGHT}     余额 :{Style.RESET_ALL}"
+            f"{Fore.CYAN+Style.BRIGHT}     Balance :{Style.RESET_ALL}"
             f"{Fore.WHITE+Style.BRIGHT} {balance} ETH {Style.RESET_ALL}"
         )
 
         if balance is None:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.RED+Style.BRIGHT} 获取 ETH 代币余额失败 {Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} Failed to fetch ETH balance {Style.RESET_ALL}"
             )
             return
 
         if balance <= self.bridge_amount:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.YELLOW+Style.BRIGHT} ETH 代币余额不足 {Style.RESET_ALL}"
+                f"{Fore.YELLOW+Style.BRIGHT} Insufficient ETH balance {Style.RESET_ALL}"
             )
             return
 
@@ -622,32 +622,32 @@ class Giwa:
         
     async def process_option_2(self, account: str, address: str, use_proxy: bool):
         self.log(
-            f"{Fore.CYAN+Style.BRIGHT}     配对    :{Style.RESET_ALL}"
-            f"{Fore.BLUE+Style.BRIGHT} 从 Giwa 到 Sepolia {Style.RESET_ALL}"
+            f"{Fore.CYAN+Style.BRIGHT}     Route    :{Style.RESET_ALL}"
+            f"{Fore.BLUE+Style.BRIGHT} Giwa → Sepolia {Style.RESET_ALL}"
         )
 
         self.log(
-            f"{Fore.CYAN+Style.BRIGHT}     数量  :{Style.RESET_ALL}"
+            f"{Fore.CYAN+Style.BRIGHT}     Amount  :{Style.RESET_ALL}"
             f"{Fore.WHITE+Style.BRIGHT} {self.bridge_amount} ETH {Style.RESET_ALL}"
         )
 
         balance = await self.get_token_balance(address, self.L2_NETWORK, use_proxy)
         self.log(
-            f"{Fore.CYAN+Style.BRIGHT}     余额 :{Style.RESET_ALL}"
+            f"{Fore.CYAN+Style.BRIGHT}     Balance :{Style.RESET_ALL}"
             f"{Fore.WHITE+Style.BRIGHT} {balance} ETH {Style.RESET_ALL}"
         )
 
         if balance is None:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.RED+Style.BRIGHT} 获取 ETH 代币余额失败 {Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} Failed to fetch ETH balance {Style.RESET_ALL}"
             )
             return
 
         if balance <= self.bridge_amount:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}"
-                f"{Fore.YELLOW+Style.BRIGHT} ETH 代币余额不足 {Style.RESET_ALL}"
+                f"{Fore.YELLOW+Style.BRIGHT} Insufficient ETH balance {Style.RESET_ALL}"
             )
             return
 
@@ -658,36 +658,36 @@ class Giwa:
         if is_valid:
 
             if option == 1:
-                self.log(f"{Fore.CYAN+Style.BRIGHT}桥接    :{Style.RESET_ALL}")
+                self.log(f"{Fore.CYAN+Style.BRIGHT}Bridging :{Style.RESET_ALL}")
                 for i in range(self.bridge_count):
                     self.log(
                         f"{Fore.MAGENTA+Style.BRIGHT}   ● {Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT}{i+1}{Style.RESET_ALL}"
-                        f"{Fore.MAGENTA+Style.BRIGHT} 共 {Style.RESET_ALL}"
+                        f"{Fore.MAGENTA+Style.BRIGHT} of {Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT}{self.bridge_count}{Style.RESET_ALL}                           "
                     )
                     await self.process_option_1(account, address, use_proxy)
                     await self.print_timer()
 
             elif option == 2:
-                self.log(f"{Fore.CYAN+Style.BRIGHT}桥接    :{Style.RESET_ALL}")
+                self.log(f"{Fore.CYAN+Style.BRIGHT}Bridging :{Style.RESET_ALL}")
                 for i in range(self.bridge_count):
                     self.log(
                         f"{Fore.MAGENTA+Style.BRIGHT}   ● {Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT}{i+1}{Style.RESET_ALL}"
-                        f"{Fore.MAGENTA+Style.BRIGHT} 共 {Style.RESET_ALL}"
+                        f"{Fore.MAGENTA+Style.BRIGHT} of {Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT}{self.bridge_count}{Style.RESET_ALL}                           "
                     )
                     await self.process_option_2(account, address, use_proxy)
                     await self.print_timer()
 
             elif option == 3:
-                self.log(f"{Fore.CYAN+Style.BRIGHT}桥接    :{Style.RESET_ALL}")
+                self.log(f"{Fore.CYAN+Style.BRIGHT}Bridging :{Style.RESET_ALL}")
                 for i in range(self.bridge_count):
                     self.log(
                         f"{Fore.MAGENTA+Style.BRIGHT}   ● {Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT}{i+1}{Style.RESET_ALL}"
-                        f"{Fore.MAGENTA+Style.BRIGHT} 共 {Style.RESET_ALL}"
+                        f"{Fore.MAGENTA+Style.BRIGHT} of {Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT}{self.bridge_count}{Style.RESET_ALL}                           "
                     )
 
@@ -697,23 +697,23 @@ class Giwa:
 
     async def main(self):
         try:
-            # 检查是否存在加密文件
+            # Check for encrypted private keys
             if os.path.exists(self.encrypted_file):
-                self.log(f"{Fore.GREEN + Style.BRIGHT}检测到加密文件，需要密码解密{Style.RESET_ALL}")
+                self.log(f"{Fore.GREEN + Style.BRIGHT}Encrypted file detected. Password required for decryption.{Style.RESET_ALL}")
                 password = self.get_password()
                 accounts = self.decrypt_accounts(password)
                 if accounts is None:
-                    self.log(f"{Fore.RED + Style.BRIGHT}解密失败，程序退出{Style.RESET_ALL}")
+                    self.log(f"{Fore.RED + Style.BRIGHT}Decryption failed, exiting.{Style.RESET_ALL}")
                     return
-                self.log(f"{Fore.GREEN + Style.BRIGHT}成功解密 {len(accounts)} 个私钥{Style.RESET_ALL}")
+                self.log(f"{Fore.GREEN + Style.BRIGHT}Successfully decrypted {len(accounts)} private key(s).{Style.RESET_ALL}")
             else:
-                # 检查是否存在原始文件
+                # Fall back to plaintext file if present
                 if os.path.exists('accounts.txt'):
-                    self.log(f"{Fore.YELLOW + Style.BRIGHT}未找到加密文件，使用原始 accounts.txt{Style.RESET_ALL}")
+                    self.log(f"{Fore.YELLOW + Style.BRIGHT}Encrypted file not found; using plaintext accounts.txt.{Style.RESET_ALL}")
                     with open('accounts.txt', 'r') as file:
                         accounts = [line.strip() for line in file if line.strip()]
                 else:
-                    self.log(f"{Fore.RED + Style.BRIGHT}未找到 accounts.txt 或 {self.encrypted_file}{Style.RESET_ALL}")
+                    self.log(f"{Fore.RED + Style.BRIGHT}Could not find accounts.txt or {self.encrypted_file}.{Style.RESET_ALL}")
                     return
             
             option, proxy_choice, rotate_proxy = self.print_question()
@@ -724,7 +724,7 @@ class Giwa:
                 self.clear_terminal()
                 self.welcome()
                 self.log(
-                    f"{Fore.GREEN + Style.BRIGHT}账户总数: {Style.RESET_ALL}"
+                    f"{Fore.GREEN + Style.BRIGHT}Total accounts: {Style.RESET_ALL}"
                     f"{Fore.WHITE + Style.BRIGHT}{len(accounts)}{Style.RESET_ALL}"
                 )
 
@@ -743,8 +743,8 @@ class Giwa:
 
                         if not address:
                             self.log(
-                                f"{Fore.CYAN+Style.BRIGHT}状态    :{Style.RESET_ALL}"
-                                f"{Fore.RED+Style.BRIGHT} 私钥无效或库版本不支持 {Style.RESET_ALL}"
+                                f"{Fore.CYAN+Style.BRIGHT}Status   :{Style.RESET_ALL}"
+                                f"{Fore.RED+Style.BRIGHT} Invalid private key or unsupported library version {Style.RESET_ALL}"
                             )
                             continue
                         
@@ -756,21 +756,21 @@ class Giwa:
                 while seconds > 0:
                     formatted_time = self.format_seconds(seconds)
                     print(
-                        f"{Fore.CYAN+Style.BRIGHT}[ 等待{Style.RESET_ALL}"
+                        f"{Fore.CYAN+Style.BRIGHT}[ Waiting{Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT} {formatted_time} {Style.RESET_ALL}"
                         f"{Fore.CYAN+Style.BRIGHT}... ]{Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.BLUE+Style.BRIGHT}所有账户已处理完毕。{Style.RESET_ALL}",
+                        f"{Fore.BLUE+Style.BRIGHT}All accounts processed.{Style.RESET_ALL}",
                         end="\r"
                     )
                     await asyncio.sleep(1)
                     seconds -= 1
 
         except FileNotFoundError:
-            self.log(f"{Fore.RED}文件 'accounts.txt' 未找到。{Style.RESET_ALL}")
+            self.log(f"{Fore.RED}File 'accounts.txt' not found.{Style.RESET_ALL}")
             return
         except ( Exception, ValueError ) as e:
-            self.log(f"{Fore.RED+Style.BRIGHT}错误: {e}{Style.RESET_ALL}")
+            self.log(f"{Fore.RED+Style.BRIGHT}Error: {e}{Style.RESET_ALL}")
             raise e
 
 if __name__ == "__main__":
@@ -781,5 +781,5 @@ if __name__ == "__main__":
         print(
             f"{Fore.CYAN + Style.BRIGHT}[ {datetime.now().astimezone(wib).strftime('%x %X %Z')} ]{Style.RESET_ALL}"
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.RED + Style.BRIGHT}[ 退出 ] Giwa 测试网 - 机器人{Style.RESET_ALL}                                       "                              
+            f"{Fore.RED + Style.BRIGHT}[ Exit ] Giwa Testnet - Bot{Style.RESET_ALL}"
         )

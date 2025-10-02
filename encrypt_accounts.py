@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Giwa Testnet Bot - 私钥加密工具
-用于加密 accounts.txt 中的私钥
+Giwa Testnet Bot - Private Key Encryption Utility
+Used to encrypt the private keys stored in accounts.txt.
 """
 
 import os
@@ -18,7 +18,7 @@ class AccountEncryptor:
         self.key_file = "encryption.key"
     
     def generate_key_from_password(self, password: str, salt: bytes) -> bytes:
-        """从密码生成加密密钥"""
+        """Generate an encryption key from the provided password."""
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -29,132 +29,132 @@ class AccountEncryptor:
         return key
     
     def encrypt_accounts(self, password: str):
-        """加密 accounts.txt 文件"""
+        """Encrypt the accounts.txt file using the supplied password."""
         try:
-            # 检查 accounts.txt 是否存在
+            # Check if accounts.txt exists
             if not os.path.exists("accounts.txt"):
-                print("❌ 错误: accounts.txt 文件不存在!")
+                print("❌ Error: accounts.txt file does not exist!")
                 return False
-            
-            # 读取原始私钥
+
+            # Read the raw private keys
             with open("accounts.txt", "r") as f:
                 accounts = [line.strip() for line in f if line.strip()]
-            
+
             if not accounts:
-                print("❌ 错误: accounts.txt 文件为空!")
+                print("❌ Error: accounts.txt file is empty!")
                 return False
-            
-            # 生成随机盐
+
+            # Generate a random salt
             salt = os.urandom(16)
-            
-            # 从密码生成密钥
+
+            # Derive a key from the password
             key = self.generate_key_from_password(password, salt)
             fernet = Fernet(key)
-            
-            # 加密所有私钥
+
+            # Encrypt all private keys
             encrypted_accounts = []
             for account in accounts:
                 encrypted_account = fernet.encrypt(account.encode())
                 encrypted_accounts.append(encrypted_account)
-            
-            # 保存加密后的数据
+
+            # Persist the encrypted data
             with open(self.encrypted_file, "wb") as f:
-                # 先写入盐
+                # Write the salt first
                 f.write(salt)
-                # 再写入加密的私钥数量
+                # Then write the number of encrypted private keys
                 f.write(len(encrypted_accounts).to_bytes(4, 'big'))
-                # 最后写入所有加密的私钥
+                # Finally write all encrypted private keys
                 for encrypted_account in encrypted_accounts:
                     f.write(len(encrypted_account).to_bytes(4, 'big'))
                     f.write(encrypted_account)
-            
-            print(f"✅ 成功加密 {len(accounts)} 个私钥到 {self.encrypted_file}")
-            print("🔐 请妥善保管您的密码，没有密码将无法解密私钥!")
-            
-            # 删除原始文件
+
+            print(f"✅ Successfully encrypted {len(accounts)} private key(s) to {self.encrypted_file}")
+            print("🔐 Keep your password safe—without it the private keys cannot be decrypted!")
+
+            # Delete the original file
             if os.path.exists("accounts.txt"):
                 os.remove("accounts.txt")
-                print("🗑️  原始 accounts.txt 文件已删除")
-            
+                print("🗑️  Original accounts.txt file deleted")
+
             return True
-            
+
         except Exception as e:
-            print(f"❌ 加密失败: {e}")
+            print(f"❌ Encryption failed: {e}")
             return False
-    
+
     def decrypt_accounts(self, password: str):
-        """解密 accounts_encrypted.txt 文件"""
+        """Decrypt the accounts_encrypted.txt file."""
         try:
             if not os.path.exists(self.encrypted_file):
-                print("❌ 错误: 加密文件不存在!")
+                print("❌ Error: encrypted file not found!")
                 return None
-            
+
             with open(self.encrypted_file, "rb") as f:
-                # 读取盐
+                # Read the salt
                 salt = f.read(16)
-                
-                # 读取私钥数量
+
+                # Read the number of private keys
                 count_bytes = f.read(4)
                 count = int.from_bytes(count_bytes, 'big')
-                
-                # 从密码生成密钥
+
+                # Derive the key from the password
                 key = self.generate_key_from_password(password, salt)
                 fernet = Fernet(key)
-                
-                # 解密所有私钥
+
+                # Decrypt each private key
                 accounts = []
                 for _ in range(count):
-                    # 读取加密私钥长度
+                    # Read the length of the encrypted key
                     length_bytes = f.read(4)
                     length = int.from_bytes(length_bytes, 'big')
-                    
-                    # 读取加密私钥
+
+                    # Read the encrypted private key
                     encrypted_account = f.read(length)
-                    
-                    # 解密私钥
+
+                    # Decrypt the private key
                     decrypted_account = fernet.decrypt(encrypted_account).decode()
                     accounts.append(decrypted_account)
-                
+
                 return accounts
-                
+
         except Exception as e:
-            print(f"❌ 解密失败: {e}")
+            print(f"❌ Decryption failed: {e}")
             return None
 
 def main():
-    print("🔐 Giwa Testnet Bot - 私钥加密工具")
+    print("🔐 Giwa Testnet Bot - Private Key Encryption Utility")
     print("=" * 50)
-    
+
     encryptor = AccountEncryptor()
-    
-    # 检查是否已有加密文件
+
+    # Check if an encrypted file already exists
     if os.path.exists(encryptor.encrypted_file):
-        print("⚠️  检测到已存在加密文件!")
-        choice = input("是否要重新加密? (y/n): ").strip().lower()
+        print("⚠️  Detected an existing encrypted file!")
+        choice = input("Re-encrypt the private keys? (y/n): ").strip().lower()
         if choice != 'y':
-            print("操作已取消")
+            print("Operation cancelled")
             return
-    
-    # 获取密码
+
+    # Prompt for a password
     while True:
-        password = getpass.getpass("请输入加密密码: ").strip()
+        password = getpass.getpass("Enter an encryption password: ").strip()
         if not password:
-            print("❌ 密码不能为空!")
+            print("❌ Password cannot be empty!")
             continue
-        
-        confirm_password = getpass.getpass("请确认密码: ").strip()
+
+        confirm_password = getpass.getpass("Confirm the password: ").strip()
         if password != confirm_password:
-            print("❌ 两次输入的密码不一致!")
+            print("❌ Passwords do not match!")
             continue
-        
+
         break
-    
-    # 执行加密
+
+    # Perform the encryption
     if encryptor.encrypt_accounts(password):
-        print("\n🎉 加密完成!")
-        print("现在可以运行 python bot.py 来使用加密的私钥")
+        print("\n🎉 Encryption complete!")
+        print("You can now run python bot.py to use the encrypted private keys.")
     else:
-        print("\n❌ 加密失败!")
+        print("\n❌ Encryption failed!")
 
 if __name__ == "__main__":
     main()
