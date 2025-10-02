@@ -1,282 +1,282 @@
-# Giwa Testnet Bot - 自动桥接机器人
+# Giwa Testnet Bot - Automated Bridging Assistant
 
-一个用于 Giwa 测试网的自动化桥接机器人，支持私钥加密、代理自动检测和多种桥接模式。
+An automation script for the Giwa testnet that supports encrypted private key storage, proxy rotation, and multiple bridging modes.
 
-## ✨ 主要功能
+## ✨ Key Features
 
-- 🔐 **私钥加密保护** - 使用密码加密私钥，提高安全性
-- 🌐 **智能代理检测** - 自动检测并使用代理（如果可用）
-- 🌉 **多种桥接模式** - 支持 Sepolia ↔ Giwa 双向桥接
-- 🔄 **随机桥接** - 随机选择桥接方向
-- 👥 **多账户支持** - 批量处理多个钱包
-- ⚡ **一键运行** - 简化的运行流程
+- 🔐 **Private key protection** – Encrypt your private keys with a password for additional security.
+- 🌐 **Smart proxy detection** – Automatically detects and uses proxies when available.
+- 🌉 **Flexible bridging modes** – Supports both Sepolia → Giwa and Giwa → Sepolia bridging.
+- 🔄 **Random bridging** – Randomly selects a direction for each run.
+- 👥 **Multi-account support** – Process multiple wallets in sequence.
+- ⚡ **One-click execution** – Simplified workflow via the launcher script.
 
-## 📋 系统要求
+## 📋 Requirements
 
-- Python 3.8 或更高版本
-- Windows/Linux/macOS
-- 稳定的网络连接
+- Python 3.8 or later
+- Windows / Linux / macOS
+- Stable internet connection
 
-## 🚀 快速开始
+## 🚀 Getting Started
 
-### 1. 下载项目
+### 1. Clone the repository
 ```bash
 git clone https://github.com/sdohuajia/GIWA-bot.git
 cd GIWA-bot
 ```
 
-### 2. 安装依赖
+### 2. Install dependencies
 ```bash
-# 方法1: 使用 requirements.txt
+# Option 1: Install from requirements.txt
 pip install -r requirements.txt
 
-# 方法2: 手动安装 SOCKS 支持（如果遇到代理问题）
+# Option 2: Manually add SOCKS support (if you encounter proxy issues)
 pip install pysocks==1.7.1
 ```
 
-### 3. 准备配置文件
+### 3. Prepare configuration files
 
-#### 📝 私钥文件 (`accounts.txt`)
-将您的私钥放入 `accounts.txt` 文件中，每行一个：
-```
+#### 📝 Private keys (`accounts.txt`)
+Place one private key per line inside `accounts.txt`:
+```text
 your_private_key_1
 your_private_key_2
 your_private_key_3
 ```
 
-#### 🌐 代理文件 (`proxy.txt`) - 可选
-如果需要使用代理，将代理信息放入 `proxy.txt` 文件中：
-```
-# HTTP 代理
+#### 🌐 Proxy list (`proxy.txt`) – Optional
+Populate `proxy.txt` if you need a proxy:
+```text
+# HTTP proxies
 http://proxy_ip:port
 http://username:password@proxy_ip:port
 
-# SOCKS 代理
+# SOCKS proxies
 socks5://proxy_ip:port
 socks5://username:password@proxy_ip:port
 ```
 
-### 4. 运行机器人
+### 4. Run the bot
 
-#### 方法1: 一键运行（推荐）
+#### Option 1: One-click launcher (recommended)
 ```bash
 python run.py
 ```
 
-#### 方法2: 直接运行
+#### Option 2: Directly start the bot
 ```bash
 python bot.py
 ```
 
-#### 方法3: 后台持续运行（推荐用于服务器）
+#### Option 3: Keep it running in the background (recommended for servers)
 ```bash
-# 安装 screen（如果未安装）
+# Install screen if needed
 # Ubuntu/Debian: sudo apt install screen
 # CentOS/RHEL: sudo yum install screen
 # macOS: brew install screen
 
-# 创建新的 screen 会话
+# Create a new screen session
 screen -S giwa-bot
 
-# 在 screen 会话中运行机器人
+# Run the bot inside the session
 python3 run.py
 
-# 按 Ctrl+A 然后按 D 来分离会话（保持后台运行）
-# 重新连接会话: screen -r giwa-bot
-# 查看所有会话: screen -ls
-# 终止会话: screen -S giwa-bot -X quit
+# Detach: press Ctrl+A then D (bot keeps running)
+# Reattach: screen -r giwa-bot
+# List sessions: screen -ls
+# Terminate: screen -S giwa-bot -X quit
 ```
 
-## 🔐 私钥加密使用流程
+## 🔐 Private Key Encryption Workflow
 
-### 首次使用 - 加密私钥
-1. 将私钥放入 `accounts.txt` 文件
-2. 运行加密脚本：
+### First-time setup – encrypt your keys
+1. Place private keys in `accounts.txt`.
+2. Run the encryption helper:
    ```bash
    python encrypt_accounts.py
    ```
-3. 输入加密密码（请记住此密码）
-4. 确认密码
-5. 等待加密完成
+3. Enter a strong password and confirm it.
+4. Wait for the encryption process to finish.
 
-### 使用加密私钥运行
-1. 运行机器人：
+### Running with encrypted keys
+1. Start the launcher:
    ```bash
    python run.py
    ```
-2. 选择 "1. 自动运行"
-3. 输入解密密码
-4. 程序自动解密并运行
+2. Choose **"1. Auto run"**.
+3. Provide the decryption password when prompted.
+4. The program decrypts the keys in memory and starts processing.
 
-## 🎯 使用流程详解
+## 🎯 Detailed Usage Flow
 
-### 1. 启动程序
+### 1. Launch the program
 ```bash
 python run.py
 ```
 
-### 2. 选择运行模式
-程序会显示菜单：
-```
+### 2. Choose a mode
+The menu displays:
+```text
 ╔══════════════════════════════════════════════════════════════╗
-║                    Giwa 测试网 一键运行脚本                    ║
+║                    Giwa Testnet One-Click Runner              ║
 ║                        ferdie_jhovie                        ║
 ╚══════════════════════════════════════════════════════════════╝
 
-📋 请选择操作:
-1. 自动运行 (加密 + 启动机器人)
-2. 仅运行加密脚本
-3. 仅启动机器人
-4. 退出
+📋 Select an option:
+1. Auto run (encrypt + launch bot)
+2. Run encryption only
+3. Launch bot only
+4. Exit
 ```
 
-### 3. 选择桥接类型
+### 3. Pick a bridging direction
+```text
+Select a bridging mode:
+1. Sepolia → Giwa
+2. Giwa → Sepolia
+3. Random direction
 ```
-选择选项:
-1. 从 Sepolia 桥接到 Giwa
-2. 从 Giwa 桥接到 Sepolia
-3. 随机桥接
-```
 
-### 4. 输入参数
-- **桥接次数**: 每个账户要执行的桥接次数
-- **ETH 数量**: 每次桥接的 ETH 数量
-- **最小延迟**: 每笔交易之间的最小等待时间（秒）
-- **最大延迟**: 每笔交易之间的最大等待时间（秒）
+### 4. Enter parameters
+- **Number of bridges** – How many times each account should bridge.
+- **ETH amount** – Amount bridged per transaction.
+- **Minimum delay** – Minimum wait time between transactions (seconds).
+- **Maximum delay** – Maximum wait time between transactions (seconds).
 
-### 5. 代理设置
-程序会自动检测：
-- 如果存在 `proxy.txt` 文件 → 自动使用代理
-- 如果不存在 `proxy.txt` 文件 → 直接连接
+### 5. Proxy handling
+The program automatically checks for proxies:
+- `proxy.txt` present → proxies will be used.
+- `proxy.txt` absent → direct connection.
 
-### 6. 开始执行
-程序会：
-1. 加载并解密私钥（如果已加密）
-2. 检测代理设置
-3. 逐个处理每个账户
-4. 显示详细的执行日志
+### 6. Execution steps
+The bot will:
+1. Load and decrypt keys if required.
+2. Detect proxy configuration.
+3. Process each account in turn.
+4. Print detailed logs for every action.
 
-## 📊 运行示例
+## 📊 Sample Output
 
-```
-[ 09/13/25 16:15:31 WIB ] | 检测到代理文件，将使用代理运行
-[ 09/13/25 16:15:31 WIB ] | 轮换无效代理? [y/n] -> y
-[ 09/13/25 16:15:31 WIB ] | 账户总数: 3
+```text
+[ 09/13/25 16:15:31 WIB ] | Detected proxy file, running with proxy
+[ 09/13/25 16:15:31 WIB ] | Rotate invalid proxy? [y/n] -> y
+[ 09/13/25 16:15:31 WIB ] | Total accounts: 3
 [ 09/13/25 16:15:31 WIB ] | =========================[ 0x1234...5678 ]=========================
-[ 09/13/25 16:15:31 WIB ] |      配对    : 从 Sepolia 到 Giwa
-[ 09/13/25 16:15:31 WIB ] |      数量  : 0.001 ETH
-[ 09/13/25 16:15:31 WIB ] |      余额 : 0.05 ETH
-[ 09/13/25 16:15:31 WIB ] |     Status  : 成功
-[ 09/13/25 16:15:31 WIB ] |     交易哈希 : 0xabcd...efgh
+[ 09/13/25 16:15:31 WIB ] |      Route   : Sepolia → Giwa
+[ 09/13/25 16:15:31 WIB ] |      Amount  : 0.001 ETH
+[ 09/13/25 16:15:31 WIB ] |      Balance : 0.05 ETH
+[ 09/13/25 16:15:31 WIB ] |      Status  : Success
+[ 09/13/25 16:15:31 WIB ] |      Tx Hash : 0xabcd...efgh
 ```
 
-### 依赖包管理
-如果遇到依赖问题，可以手动检查：
+## 📦 Dependency Management
+If you run into dependency issues, verify versions manually:
 ```bash
-# 检查包版本
+# Check package versions
 pip show web3 eth-account
 
-# 重新安装特定版本
+# Reinstall specific versions
 pip uninstall web3 eth-account
 pip install web3==7.11.1 eth-account==0.13.7
 ```
 
-### 后台运行管理
-对于需要长时间运行的服务器环境，推荐使用 screen：
+## 🖥️ Background Operations
+For long-running sessions on servers, `screen` keeps the bot alive.
 
-#### Screen 基本命令
+#### Basic screen commands
 ```bash
-# 创建新会话
+# Create a new session
 screen -S giwa-bot
 
-# 列出所有会话
+# List sessions
 screen -ls
 
-# 重新连接到会话
+# Reattach to a session
 screen -r giwa-bot
 
-# 分离会话（保持运行）
-# 在会话内按: Ctrl+A 然后按 D
+# Detach (keep running)
+# Inside the session press: Ctrl+A then D
 
-# 终止会话
+# Terminate a session
 screen -S giwa-bot -X quit
 
-# 强制终止所有 screen 会话
+# Force-remove dead sessions
 screen -wipe
 ```
 
-#### 自动化脚本示例
-创建 `start_bot.sh` 脚本：
+#### Automation helper script
+Create a `start_bot.sh` script:
 ```bash
 #!/bin/bash
-# 检查是否已有 giwa-bot 会话
+# Check if the giwa-bot session already exists
 if screen -list | grep -q "giwa-bot"; then
-    echo "giwa-bot 会话已存在，正在重新连接..."
+    echo "giwa-bot session found, reconnecting..."
     screen -r giwa-bot
 else
-    echo "创建新的 giwa-bot 会话..."
+    echo "Starting a new giwa-bot session..."
     screen -S giwa-bot python3 run.py
 fi
 ```
-## 🛠️ 故障排除
 
-### 常见问题
+## 🛠️ Troubleshooting
+
+### Common issues
 
 1. **"Missing dependencies for SOCKS support"**
    ```bash
    pip install pysocks==1.7.1
    ```
 
-2. **"解密失败"**
-   - 检查密码是否正确
-   - 确认 `accounts_encrypted.txt` 文件完整
+2. **"Decryption failed"**
+   - Verify the password.
+   - Ensure `accounts_encrypted.txt` is intact.
 
-3. **"连接RPC失败"**
-   - 检查网络连接
-   - 尝试更换代理
-   - 检查 RPC 节点状态
+3. **"Unable to connect to RPC"**
+   - Check your internet connection.
+   - Try another proxy.
+   - Confirm the RPC endpoint status.
 
-4. **"私钥无效"**
-   - 检查私钥格式
-   - 确认私钥长度正确
+4. **"Invalid private key"**
+   - Confirm the key format.
+   - Ensure the key length is correct.
 
-### 日志分析
-程序会显示详细的日志信息，包括：
-- 连接状态
-- 交易哈希
-- 错误信息
-- 余额信息
+### Log insights
+The console output includes:
+- Connection state
+- Transaction hashes
+- Error details
+- Balance updates
 
-## 📁 文件结构
+## 📁 Project Structure
 
-```
+```text
 GIWA-bot/
-├── bot.py                    # 主程序
-├── run.py                    # 一键运行脚本
-├── encrypt_accounts.py       # 私钥加密脚本
-├── accounts.txt              # 原始私钥文件
-├── accounts_encrypted.txt    # 加密私钥文件
-├── proxy.txt                 # 代理配置文件
-├── requirements.txt          # 依赖包列表
-├── README.md                 # 使用说明
-└── ENCRYPTION_GUIDE.md       # 加密使用指南
+├── bot.py                    # Main bot logic
+├── run.py                    # One-click launcher
+├── encrypt_accounts.py       # Private key encryption helper
+├── accounts.txt              # Plaintext private keys (deleted after encryption)
+├── accounts_encrypted.txt    # Encrypted private keys
+├── proxy.txt                 # Proxy configuration
+├── requirements.txt          # Dependency list
+├── README.md                 # This guide
+└── ENCRYPTION_GUIDE.md       # Detailed encryption instructions
 ```
 
-## ⚠️ 安全提醒
+## ⚠️ Security Tips
 
-1. **私钥安全**: 请妥善保管您的私钥和加密密码
-2. **环境安全**: 在安全的计算机环境中运行
-3. **备份重要**: 建议备份加密文件和密码
-4. **定期更新**: 建议定期更换密码并重新加密
+1. **Protect your secrets** – Keep both passwords and private keys safe.
+2. **Use a secure environment** – Run the bot on trusted machines only.
+3. **Back up critical data** – Store encrypted files and passwords securely.
+4. **Rotate credentials periodically** – Re-encrypt with new passwords from time to time.
 
-## 📞 支持
+## 📞 Support
 
-如果您遇到问题或有建议，请：
-1. 检查本文档的故障排除部分
-2. 查看 `ENCRYPTION_GUIDE.md` 了解加密功能
-3. 检查日志输出获取详细错误信息
+If you need help:
+1. Review the troubleshooting section above.
+2. Read `ENCRYPTION_GUIDE.md` for encryption details.
+3. Inspect the console logs for precise error messages.
 
 ---
 
-**开发者**: ferdie_jhovie  
-**版本**: 2.0 (支持私钥加密)  
+**Maintainer**: ferdie_jhovie  
+**Version**: 2.0 (private key encryption supported)

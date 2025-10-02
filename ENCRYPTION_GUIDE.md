@@ -1,90 +1,90 @@
-# Giwa Testnet Bot - 私钥加密使用指南
+# Giwa Testnet Bot – Private Key Encryption Guide
 
-## 概述
-为了保护您的私钥安全，本脚本现在支持私钥加密功能。私钥将被加密存储在 `accounts_encrypted.txt` 文件中，运行机器人时需要输入密码进行解密。
+## Overview
+To keep your wallets secure, the bot supports encrypting private keys. Encrypted keys are stored in `accounts_encrypted.txt` and require your password to decrypt when the bot runs.
 
-## 使用步骤
+## Step-by-step instructions
 
-### 1. 安装依赖
+### 1. Install dependencies
 ```bash
-# 方法1: 使用requirements.txt
+# Option 1: install everything from requirements.txt
 pip install -r requirements.txt
 
-# 方法2: 使用安装脚本（推荐）
+# Option 2: run the helper installer (recommended)
 python install_dependencies.py
 
-# 方法3: 手动安装SOCKS支持
+# Option 3: manually add SOCKS support
 pip install pysocks==1.7.1
 ```
 
-### 2. 准备私钥文件
-将您的私钥放入 `accounts.txt` 文件中，每行一个私钥：
-```
+### 2. Prepare the private key file
+Place each private key on its own line in `accounts.txt`:
+```text
 your_private_key_1
 your_private_key_2
 your_private_key_3
 ```
 
-### 3. 加密私钥
-运行加密脚本：
+### 3. Encrypt the keys
+Run the encryption utility:
 ```bash
 python encrypt_accounts.py
 ```
 
-按照提示：
-- 输入加密密码（请记住此密码）
-- 确认密码
-- 等待加密完成
+Follow the prompts:
+- Enter an encryption password (store it safely).
+- Confirm the password.
+- Wait for the encryption process to finish.
 
-加密完成后：
-- 原始 `accounts.txt` 文件将被自动删除
-- 生成加密文件 `accounts_encrypted.txt`
+After encryption completes:
+- The original `accounts.txt` file is removed automatically.
+- A new encrypted file `accounts_encrypted.txt` is created.
 
-### 4. 运行机器人
+### 4. Run the bot
 ```bash
 python bot.py
 ```
 
-程序将：
-- 检测到加密文件
-- 提示输入解密密码
-- 解密私钥后正常运行
+The program will:
+- Detect the encrypted file.
+- Ask for the decryption password.
+- Decrypt the keys in memory and continue as normal.
 
-## 安全特性
+## Security highlights
 
-1. **强加密算法**: 使用 PBKDF2 + Fernet 加密
-2. **随机盐值**: 每次加密都生成不同的盐值
-3. **密码保护**: 没有正确密码无法解密
-4. **内存安全**: 解密后的私钥仅在内存中短暂存在
+1. **Strong encryption** – PBKDF2 + Fernet provide hardened protection.
+2. **Random salt** – Every encryption run uses a unique salt.
+3. **Password required** – Private keys cannot be recovered without the password.
+4. **In-memory safety** – Decrypted keys only exist temporarily in memory.
 
-## 文件说明
+## File reference
 
-- `accounts.txt`: 原始私钥文件（加密后自动删除）
-- `accounts_encrypted.txt`: 加密后的私钥文件
-- `encrypt_accounts.py`: 加密工具脚本
+- `accounts.txt`: plaintext private keys (removed after encryption).
+- `accounts_encrypted.txt`: encrypted private keys.
+- `encrypt_accounts.py`: CLI helper for encryption and decryption.
 
-## 注意事项
+## Best practices
 
-1. **密码安全**: 请使用强密码并妥善保管
-2. **备份重要**: 建议备份加密文件和密码
-3. **定期更新**: 建议定期更换密码并重新加密
-4. **环境安全**: 在安全的计算机环境中进行加密操作
-5. **原始文件**: 加密后原始 accounts.txt 会被自动删除
+1. **Use a strong password** and store it securely.
+2. **Create backups** of the encrypted file and your password.
+3. **Rotate passwords periodically** and re-encrypt when needed.
+4. **Work on a trusted machine** to avoid malware risks.
+5. **Remember the deletion step** – the script removes the plaintext file after encryption.
 
-## 故障排除
+## Troubleshooting
 
-### 解密失败
-- 检查密码是否正确
-- 确认 `accounts_encrypted.txt` 文件完整
-- 重新运行加密脚本
+### Decryption failed
+- Recheck the password.
+- Confirm that `accounts_encrypted.txt` is intact.
+- Re-run the encryption tool if necessary.
 
-### 找不到文件
-- 确认 `accounts_encrypted.txt` 存在
-- 如果没有加密文件，程序会尝试使用原始的 `accounts.txt`
+### File not found
+- Ensure `accounts_encrypted.txt` exists.
+- If it does not, the bot will fall back to `accounts.txt` if available.
 
-## 恢复原始文件
-如果需要恢复原始私钥：
-1. 运行 `python encrypt_accounts.py`
-2. 输入正确的密码
-3. 程序会解密并显示私钥
-4. 手动复制到新的 `accounts.txt` 文件
+## Restoring plaintext keys
+If you need to recover your original keys:
+1. Run `python encrypt_accounts.py`.
+2. Enter the correct password.
+3. The program displays the decrypted keys.
+4. Manually copy them into a new `accounts.txt` file.
