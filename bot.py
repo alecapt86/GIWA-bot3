@@ -12,6 +12,15 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
 from decimal import Decimal, getcontext
 
+import sys  # добавили только sys
+
+# ВАЖНО: ставим политику сразу после импортов (до первого создания event loop)
+if sys.platform.startswith('win'):
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except Exception:
+        pass
+
 # высокая точность для расчётов ETH -> wei
 getcontext().prec = 50
 
