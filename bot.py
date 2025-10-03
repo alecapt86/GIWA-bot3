@@ -12,6 +12,16 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
 from decimal import Decimal, getcontext
 
+# ==== file logging helpers ====
+ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")  # убрать цвета для файла
+
+
+def _sanitize_ansi(s: str) -> str:
+    try:
+        return ANSI_ESCAPE_RE.sub("", s)
+    except Exception:
+        return s
+
 import sys  # добавили только sys
 
 # ВАЖНО: ставим политику сразу после импортов (до первого создания event loop)
@@ -72,6 +82,9 @@ class Giwa:
         self.proxies = []
         self.proxy_index = 0
         self.account_proxies = {}
+
+        # file log
+        self.log_file_path = "logs.txt"
 
         # --- настройки бриджа ---
         # count: можно фиксированное (bridge_count) или диапазон (bridge_count_min/max)
@@ -138,11 +151,45 @@ class Giwa:
     def clear_terminal(self):
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def log(self, message):
-        print(
-            f"{Fore.CYAN + Style.BRIGHT}[ {datetime.now().astimezone(wib).strftime('%x %X %Z')} ]{Style.RESET_ALL}"
-            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}{message}",
-            flush=True
+    def log(self, message: str, file_extra: str | None = None):
+        """
+        Печатает цветной лог в консоль и пишет «обесцвеченный» в logs.txt.
+        file_extra — можно передать доп. текст, который попадет только в файл (например полный адрес).
+        """
+        ts = datetime.now().astimezone(wib).strftime('%x %X %Z')
+        console_line = (
+            f"{Fore.CYAN + Style.BRIGHT}[ {ts} ]{Style.RESET_ALL}"
+            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}{message}"
+        )
+        print(console_line, flush=True)
+
+        try:
+            file_line = f"[ {ts} ] | " + _sanitize_ansi(message)
+            if file_extra:
+                file_line += " | " + file_extra
+            with open(self.log_file_path, 'a', encoding='utf-8') as f:
+                f.write(file_line.rstrip() + "\n")
+        except Exception:
+            # пишем молча, чтобы логирование в файл не ломало работу бота
+            pass
+
+    def log_file_only(self, message: str):
+        """Пишет строку только в файл (без печати в консоль)."""
+        ts = datetime.now().astimezone(wib).strftime('%x %X %Z')
+        try:
+            with open(self.log_file_path, 'a', encoding='utf-8') as f:
+                f.write(f"[ {ts} ] | {message}\n")
+        except Exception:
+            pass
+
+    def log_account_header(self, address_full: str, address_masked: str):
+        """Красивый заголовок в консоль (маска), и отдельная строка в файл с полным адресом."""
+        separator = "=" * 25
+        self.log(
+            f"{Fore.CYAN + Style.BRIGHT}{separator}[{Style.RESET_ALL}"
+            f"{Fore.WHITE + Style.BRIGHT} {address_masked} {Style.RESET_ALL}"
+            f"{Fore.CYAN + Style.BRIGHT}]{separator}{Style.RESET_ALL}",
+            file_extra=f"ACCOUNT={address_full}"
         )
 
     def welcome(self):
@@ -576,6 +623,9 @@ class Giwa:
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Block   :{Style.RESET_ALL}{Fore.WHITE+Style.BRIGHT} {block_number} {Style.RESET_ALL}")
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Tx Hash :{Style.RESET_ALL}{Fore.WHITE+Style.BRIGHT} {tx_hash} {Style.RESET_ALL}")
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Explorer:{Style.RESET_ALL}{Fore.WHITE+Style.BRIGHT} {network['explorer']}{tx_hash} {Style.RESET_ALL}")
+            self.log_file_only(
+                f"ADDR={address} | NETWORK={network['name']} | OP=DEPOSIT | AMOUNT={amt_eth} | BLOCK={block_number} | TX={tx_hash}"
+            )
         else:
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}{Fore.RED+Style.BRIGHT} On-chain operation failed {Style.RESET_ALL}")
 
@@ -586,6 +636,9 @@ class Giwa:
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Block   :{Style.RESET_ALL}{Fore.WHITE+Style.BRIGHT} {block_number} {Style.RESET_ALL}")
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Tx Hash :{Style.RESET_ALL}{Fore.WHITE+Style.BRIGHT} {tx_hash} {Style.RESET_ALL}")
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Explorer:{Style.RESET_ALL}{Fore.WHITE+Style.BRIGHT} {network['explorer']}{tx_hash} {Style.RESET_ALL}")
+            self.log_file_only(
+                f"ADDR={address} | NETWORK={network['name']} | OP=WITHDRAW | AMOUNT={amt_eth} | BLOCK={block_number} | TX={tx_hash}"
+            )
         else:
             self.log(f"{Fore.CYAN+Style.BRIGHT}     Status  :{Style.RESET_ALL}{Fore.RED+Style.BRIGHT} On-chain operation failed {Style.RESET_ALL}")
 
@@ -684,15 +737,10 @@ class Giwa:
                 if use_proxy:
                     await self.load_proxies()
 
-                separator = "=" * 25
                 for account in accounts:
                     if account:
                         address = self.generate_address(account)
-                        self.log(
-                            f"{Fore.CYAN + Style.BRIGHT}{separator}[{Style.RESET_ALL}"
-                            f"{Fore.WHITE + Style.BRIGHT} {self.mask_account(address)} {Style.RESET_ALL}"
-                            f"{Fore.CYAN + Style.BRIGHT}]{separator}{Style.RESET_ALL}"
-                        )
+                        self.log_account_header(address_full=address, address_masked=self.mask_account(address))
 
                         if not address:
                             self.log(f"{Fore.CYAN+Style.BRIGHT}Status   :{Style.RESET_ALL}{Fore.RED+Style.BRIGHT} Invalid private key or unsupported library version {Style.RESET_ALL}")
